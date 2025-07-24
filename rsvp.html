@@ -5,80 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RSVP</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
-      padding: 20px;
-      max-width: 600px;
-      margin: auto;
-      color: #333;
-    }
-    h1, h2 {
-      text-align: center;
-    }
-    label {
-      display: block;
-      margin-top: 8px;
-      font-weight: bold;
-    }
-    input, select, button {
-      margin-top: 4px;
-      padding: 8px;
-      width: 100%;
-      box-sizing: border-box;
-      font-size: 1em;
-    }
-    button {
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-top: 12px;
-    }
-    button:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-    .member {
-      margin: 15px 0;
-      padding: 12px;
-      background: #fff;
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .hidden {
+    body { font-family: Arial, sans-serif; background: #f9f9f9; padding: 20px; max-width: 600px; margin: auto; }
+    h1, h2 { text-align: center; }
+    label { display: block; margin-top: 8px; font-weight: bold; }
+    input, select, button { margin-top: 4px; padding: 8px; width: 100%; box-sizing: border-box; font-size: 1em; }
+    button { background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 12px; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    .hidden { display: none; }
+    .member { margin: 15px 0; padding: 12px; background: #fff; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    #version { font-size: 0.9em; text-align: center; margin-top: 20px; color: gray; }
+    #responseMessage { margin-top: 15px; font-weight: bold; text-align: center; }
+    /* Overlay */
+    #overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.4);
       display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
     }
-    #spinner, #submitSpinner {
-      display: none;
-      text-align: center;
-      margin-top: 10px;
+    .spinner {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #007bff;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
     }
-    #version {
-      font-size: 0.9em;
-      text-align: center;
-      margin-top: 20px;
-      color: gray;
-    }
-    #responseMessage {
-      margin-top: 15px;
-      font-weight: bold;
-      text-align: center;
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
+<div id="overlay"><div class="spinner"></div></div>
+
 <h1>RSVP Lookup</h1>
 <div id="lookup">
   <label for="firstName">First Name:</label>
   <input type="text" id="firstName" required />
-
   <label for="lastName">Last Name:</label>
   <input type="text" id="lastName" required />
-
   <button onclick="lookupGroup()">Find My Group</button>
-  <div id="spinner">🔄 Searching...</div>
 </div>
 
 <div id="formContainer" class="hidden">
@@ -87,18 +58,49 @@
     <input type="hidden" id="groupNumber" name="groupNumber" />
     <div id="membersContainer"></div>
     <button type="submit">Submit RSVP</button>
-    <div id="submitSpinner">🔄 Submitting...</div>
+  </form>
+</div>
+
+<div id="fallbackForm" class="hidden">
+  <h2>General RSVP Form</h2>
+  <form id="generalRSVPForm">
+    <label for="genFirstName">First Name:</label>
+    <input type="text" id="genFirstName" required />
+    <label for="genLastName">Last Name:</label>
+    <input type="text" id="genLastName" required />
+    <label for="genEmail">Email:</label>
+    <input type="email" id="genEmail" required />
+    <label for="genPhone">Phone:</label>
+    <input type="text" id="genPhone" />
+    <label for="genAttend">Will you be attending?</label>
+    <select id="genAttend" required onchange="toggleGeneralMeal()">
+      <option value="">-- Select --</option>
+      <option value="Yes">Yes</option>
+      <option value="No">No</option>
+    </select>
+    <div id="generalMealContainer" class="hidden">
+      <label for="genMeal">Meal Choice:</label>
+      <select id="genMeal">
+        <option value="Beef">Beef</option>
+        <option value="Chicken">Chicken</option>
+      </select>
+    </div>
+    <button type="submit">Submit RSVP</button>
   </form>
 </div>
 
 <p id="responseMessage"></p>
-<p id="version">Version: v2.1.0</p>
+<p id="version">Version: v2.2.0</p>
 
 <script>
   const BASE_URL = 'https://script.google.com/macros/s/AKfycbxnlWjEmD6yrOfeQNR2osTzBtPQWtoC3veNXsVB2x5bovsXp_a63AvudkyB1jMC8Sfs/exec';
 
   let currentGroup = null;
   let members = [];
+
+  function showOverlay(show) {
+    document.getElementById('overlay').style.display = show ? 'flex' : 'none';
+  }
 
   function lookupGroup() {
     const first = document.getElementById('firstName').value.trim();
@@ -109,7 +111,7 @@
     }
 
     document.getElementById('responseMessage').innerText = '';
-    document.getElementById('spinner').style.display = 'block';
+    showOverlay(true);
 
     const script = document.createElement('script');
     script.src = `${BASE_URL}?action=search&name=${encodeURIComponent(first + ' ' + last)}&callback=handleLookup`;
@@ -117,10 +119,11 @@
   }
 
   function handleLookup(response) {
-    document.getElementById('spinner').style.display = 'none';
+    showOverlay(false);
 
     if (!response.found) {
-      document.getElementById('responseMessage').innerText = 'No matching group found.';
+      document.getElementById('responseMessage').innerText = 'No matching group found. Please check the spelling of your name or fill out the general RSVP form below.';
+      document.getElementById('fallbackForm').classList.remove('hidden');
       return;
     }
 
@@ -128,7 +131,6 @@
     members = response.members;
 
     document.getElementById('groupNumber').value = currentGroup;
-
     const container = document.getElementById('membersContainer');
     container.innerHTML = '';
     members.forEach((m, i) => {
@@ -157,6 +159,7 @@
     });
 
     document.getElementById('lookup').style.display = 'none';
+    document.getElementById('fallbackForm').classList.add('hidden');
     document.getElementById('formContainer').classList.remove('hidden');
     document.getElementById('responseMessage').innerText = '';
   }
@@ -166,9 +169,14 @@
     document.getElementById(`meal-container-${index}`).style.display = attending === 'Yes' ? 'block' : 'none';
   }
 
+  function toggleGeneralMeal() {
+    const attending = document.getElementById('genAttend').value;
+    document.getElementById('generalMealContainer').style.display = attending === 'Yes' ? 'block' : 'none';
+  }
+
   document.getElementById('rsvpForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    document.getElementById('submitSpinner').style.display = 'block';
+    showOverlay(true);
 
     const membersResponses = members.map((m, i) => ({
       firstName: m.firstName,
@@ -183,10 +191,30 @@
     document.body.appendChild(script);
   });
 
+  document.getElementById('generalRSVPForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    showOverlay(true);
+
+    const generalResponse = [{
+      firstName: document.getElementById('genFirstName').value.trim(),
+      lastName: document.getElementById('genLastName').value.trim(),
+      email: document.getElementById('genEmail').value.trim(),
+      phone: document.getElementById('genPhone').value.trim(),
+      attending: document.getElementById('genAttend').value,
+      meal: document.getElementById('genAttend').value === 'Yes' ? document.getElementById('genMeal').value : '',
+      comments: ''
+    }];
+
+    const script = document.createElement('script');
+    script.src = `${BASE_URL}?action=submit&groupNumber=GENERAL&members=${encodeURIComponent(JSON.stringify(generalResponse))}&callback=handleSubmit`;
+    document.body.appendChild(script);
+  });
+
   function handleSubmit(response) {
-    document.getElementById('submitSpinner').style.display = 'none';
+    showOverlay(false);
     document.getElementById('responseMessage').innerText = response.message || 'RSVP submitted!';
     document.getElementById('formContainer').classList.add('hidden');
+    document.getElementById('fallbackForm').classList.add('hidden');
   }
 </script>
 </body>
