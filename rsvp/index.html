@@ -5,17 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RSVP Form</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f9f9f9; padding: 20px; max-width: 600px; margin: auto; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #FDFBF7;
+      color: #483c32;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
     h1, h2 { text-align: center; }
     label { display: block; margin-top: 8px; font-weight: bold; }
     input, select, button { margin-top: 4px; padding: 8px; width: 100%; box-sizing: border-box; font-size: 1em; }
-    button { background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 12px; }
+    button { background: #3b4d3b; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 12px; }
     button.secondary { background: #666; }
     button:disabled { background: #ccc; cursor: not-allowed; }
     .hidden { display: none; }
     .member { margin: 15px 0; padding: 12px; background: #fff; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    #version { font-size: 0.9em; text-align: center; margin-top: 20px; color: gray; }
-    #footer { font-size: 0.9em; text-align: center; margin-top: 20px; color: #444; white-space: pre-line; }
+    #footer { font-size: 0.9em; text-align: center; margin-top: 20px; color: #483c32; white-space: pre-line; }
     #thankYouMessage { text-align: center; font-size: 1.2em; font-weight: bold; margin-top: 20px; color: green; }
     #errorAboveFallback { margin-top: 20px; font-weight: bold; text-align: center; color: #c00; }
     /* Overlay */
@@ -31,7 +37,7 @@
     }
     .spinner {
       border: 6px solid #f3f3f3;
-      border-top: 6px solid #007bff;
+      border-top: 6px solid #3b4d3b;
       border-radius: 50%;
       width: 50px;
       height: 50px;
@@ -61,7 +67,7 @@
     <input type="hidden" id="groupNumber" name="groupNumber" />
     <div id="membersContainer"></div>
     <label for="emailCopy" style="margin-top: 20px; display: block;">
-      If you want to receive an email copy of your RSVP submission, please provide your email:
+      Enter your email if you'd like a confirmation of your RSVP:
     </label>
     <input type="email" id="emailCopy" style="margin-bottom: 20px;" />
     <button type="submit">Submit RSVP</button>
@@ -101,7 +107,6 @@
 
 <div id="thankYouMessage" class="hidden"></div>
 
-<p id="version">Version: v2.7.3</p>
 <p id="footer">
   If you run into any technical issue, please reach out to Ben John at
   contact@benjamin-john.com or call 612-839-6889.
