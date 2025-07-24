@@ -1,75 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RSVP</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-    #version {
-      font-size: 0.9em;
-      color: gray;
-      margin-top: 10px;
-    }
-    #responseMessage {
-      margin-top: 10px;
-      font-weight: bold;
-    }
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #version { font-size: 0.9em; color: gray; margin-top: 10px; }
+    #responseMessage { margin-top: 10px; font-weight: bold; }
   </style>
 </head>
 <body>
 <h1>RSVP Form</h1>
 <form id="rsvpForm">
   <label for="name">Name:</label>
-  <input type="text" id="name" name="name" required /><br /><br />
-
+  <input type="text" id="name" name="name" required><br><br>
   <label for="email">Email:</label>
-  <input type="email" id="email" name="email" required /><br /><br />
-
+  <input type="email" id="email" name="email" required><br><br>
   <label for="rsvp">Will you attend?</label>
   <select id="rsvp" name="rsvp" required>
     <option value="Yes">Yes</option>
     <option value="No">No</option>
-  </select><br /><br />
-
+  </select><br><br>
   <button type="submit">Submit</button>
 </form>
 
 <p id="responseMessage"></p>
-<p id="version">Version: v1.0.1</p>
+<p id="version">Version: v1.0.2</p>
 
 <script>
   document.getElementById('rsvpForm').addEventListener('submit', function(e) {
     e.preventDefault();
-
-    const formData = {
-      name: document.getElementById('name').value,
-      email: document.getElementById('email').value,
-      rsvp: document.getElementById('rsvp').value
-    };
-
     document.getElementById('responseMessage').innerText = 'Submitting...';
 
-    fetch('https://script.google.com/macros/s/AKfycbxnlWjEmD6yrOfeQNR2osTzBtPQWtoC3veNXsVB2x5bovsXp_a63AvudkyB1jMC8Sfs/exec', {
-      method: 'POST',
-      mode: 'cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
-    })
-            .then(response => response.json())
-            .then(data => {
-              document.getElementById('responseMessage').innerText = data.message;
-              document.getElementById('rsvpForm').reset();
-            })
-            .catch(error => {
-              console.error(error);
-              document.getElementById('responseMessage').innerText =
-                      'There was an error submitting your RSVP.';
-            });
+    const script = document.createElement('script');
+    const baseUrl = 'https://script.google.com/macros/s/AKfycbxnlWjEmD6yrOfeQNR2osTzBtPQWtoC3veNXsVB2x5bovsXp_a63AvudkyB1jMC8Sfs/exec';
+    const params = new URLSearchParams({
+      name: document.getElementById('name').value,
+      email: document.getElementById('email').value,
+      rsvp: document.getElementById('rsvp').value,
+      callback: 'handleResponse'
+    });
+    script.src = baseUrl + '?' + params.toString();
+    document.body.appendChild(script);
   });
+
+  function handleResponse(response) {
+    document.getElementById('responseMessage').innerText = response.message;
+    document.getElementById('rsvpForm').reset();
+  }
 </script>
 </body>
 </html>
