@@ -101,7 +101,7 @@
 
 <div id="thankYouMessage" class="hidden"></div>
 
-<p id="version">Version: v2.7.2</p>
+<p id="version">Version: v2.7.3</p>
 <p id="footer">
   If you run into any technical issue, please reach out to Ben John at
   contact@benjamin-john.com or call 612-839-6889.
@@ -142,9 +142,10 @@
     const errorDiv = document.getElementById('errorAboveFallback');
 
     if (!response || !response.found) {
-      errorDiv.innerText =
-              'We could not find your invitation. Please check the spelling of your name and try again. ' +
-              'If we fail to find your invitation, then please fill out the general RSVP form below. Thanks!';
+      const msg = response && response.message
+              ? response.message
+              : 'We could not find your invitation. Please check the spelling of your name and try again.';
+      errorDiv.innerText = msg + ' If we fail to find your invitation, then please fill out the general RSVP form below. Thanks!';
       errorDiv.classList.remove('hidden');
       document.getElementById('fallbackForm').classList.remove('hidden');
       return;
