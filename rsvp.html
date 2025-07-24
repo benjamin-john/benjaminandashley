@@ -60,8 +60,10 @@
   <form id="rsvpForm">
     <input type="hidden" id="groupNumber" name="groupNumber" />
     <div id="membersContainer"></div>
-    <label for="emailCopy">If you want to receive an email copy of your RSVP submission, please provide your email:</label>
-    <input type="email" id="emailCopy" />
+    <label for="emailCopy" style="margin-top: 20px; display: block;">
+      If you want to receive an email copy of your RSVP submission, please provide your email:
+    </label>
+    <input type="email" id="emailCopy" style="margin-bottom: 20px;" />
     <button type="submit">Submit RSVP</button>
     <button type="button" class="secondary" onclick="goBack()">Back</button>
   </form>
@@ -99,7 +101,7 @@
 
 <div id="thankYouMessage" class="hidden"></div>
 
-<p id="version">Version: v2.7.1</p>
+<p id="version">Version: v2.7.2</p>
 <p id="footer">
   If you run into any technical issue, please reach out to Ben John at
   contact@benjamin-john.com or call 612-839-6889.
@@ -148,7 +150,6 @@
       return;
     }
 
-    // New check for alreadySubmitted
     if (response.alreadySubmitted) {
       document.getElementById('lookup').style.display = 'none';
       document.getElementById('formContainer').classList.add('hidden');
