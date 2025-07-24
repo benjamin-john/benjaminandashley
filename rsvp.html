@@ -17,6 +17,7 @@
     #version { font-size: 0.9em; text-align: center; margin-top: 20px; color: gray; }
     #footer { font-size: 0.9em; text-align: center; margin-top: 20px; color: #444; white-space: pre-line; }
     #thankYouMessage { text-align: center; font-size: 1.2em; font-weight: bold; margin-top: 20px; color: green; }
+    #errorAboveFallback { margin-top: 20px; font-weight: bold; text-align: center; color: #c00; }
     /* Overlay */
     #overlay {
       position: fixed;
@@ -98,7 +99,7 @@
 
 <div id="thankYouMessage" class="hidden"></div>
 
-<p id="version">Version: v2.7.0</p>
+<p id="version">Version: v2.7.1</p>
 <p id="footer">
   If you run into any technical issue, please reach out to Ben John at
   contact@benjamin-john.com or call 612-839-6889.
@@ -147,6 +148,7 @@
       return;
     }
 
+    // New check for alreadySubmitted
     if (response.alreadySubmitted) {
       document.getElementById('lookup').style.display = 'none';
       document.getElementById('formContainer').classList.add('hidden');
