@@ -82,6 +82,7 @@
     <div id="generalMealContainer" class="hidden">
       <label for="genMeal">Meal Choice:</label>
       <select id="genMeal">
+        <option value="">-- Select --</option>
         <option value="Beef">Beef</option>
         <option value="Chicken">Chicken</option>
       </select>
@@ -93,7 +94,7 @@
   </form>
 </div>
 
-<p id="version">Version: v2.5.0</p>
+<p id="version">Version: v2.6.0</p>
 <p id="footer">
   If you run into any technical issue, please reach out to Ben John at
   <a href="mailto:contact@benjamin-john.com">contact@benjamin-john.com</a> or call 612-839-6889.
@@ -101,7 +102,6 @@
 
 <script>
   const BASE_URL = 'https://script.google.com/macros/s/AKfycbxnlWjEmD6yrOfeQNR2osTzBtPQWtoC3veNXsVB2x5bovsXp_a63AvudkyB1jMC8Sfs/exec';
-
   let currentGroup = null;
   let members = [];
 
@@ -150,35 +150,30 @@
     const container = document.getElementById('membersContainer');
     container.innerHTML = '';
     members.forEach((m, i) => {
-      if (/guest/i.test(m.firstName + " " + m.lastName)) {
+      const isGuest = /guest/i.test(m.firstName + " " + m.lastName);
+      if (isGuest) {
         container.innerHTML += `
             <div class="member">
               <h3>Guest</h3>
-              <label>Will you be bringing a Guest?
-                <select id="bringGuest-${i}" required onchange="toggleGuest(${i})">
-                  <option value="">-- Select --</option>
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
-              </label>
-              <div id="guestFields-${i}" class="hidden">
-                <label>Guest First Name: <input type="text" id="guestFirst-${i}" required /></label>
-                <label>Guest Last Name: <input type="text" id="guestLast-${i}" required /></label>
-                <label>Attending?
-                  <select id="attend-${i}" required onchange="toggleMeal(${i})">
+              <div id="guestPrompt-${i}" class="hidden">
+                <label>Will you be bringing a Guest?
+                  <select id="bringGuest-${i}" required onchange="toggleGuestFields(${i})">
                     <option value="">-- Select --</option>
                     <option value="Yes">Yes</option>
                     <option value="No">No</option>
                   </select>
                 </label>
-                <div id="meal-container-${i}" class="hidden">
-                  <label>Meal Choice:
-                    <select id="meal-${i}">
-                      <option value="Beef">Beef</option>
-                      <option value="Chicken">Chicken</option>
-                    </select>
-                  </label>
-                </div>
+              </div>
+              <div id="guestFields-${i}" class="hidden">
+                <label>Guest First Name: <input type="text" id="guestFirst-${i}" /></label>
+                <label>Guest Last Name: <input type="text" id="guestLast-${i}" /></label>
+                <label>Meal Choice:
+                  <select id="meal-${i}">
+                    <option value="">-- Select --</option>
+                    <option value="Beef">Beef</option>
+                    <option value="Chicken">Chicken</option>
+                  </select>
+                </label>
                 <label>Comments:
                   <input type="text" id="comments-${i}" />
                 </label>
@@ -189,7 +184,7 @@
             <div class="member">
               <h3>${m.firstName} ${m.lastName}</h3>
               <label>Attending?
-                <select id="attend-${i}" required onchange="toggleMeal(${i})">
+                <select id="attend-${i}" required onchange="toggleMeal(${i}, ${isGuest})">
                   <option value="">-- Select --</option>
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
@@ -198,6 +193,7 @@
               <div id="meal-container-${i}" class="hidden">
                 <label>Meal Choice:
                   <select id="meal-${i}">
+                    <option value="">-- Select --</option>
                     <option value="Beef">Beef</option>
                     <option value="Chicken">Chicken</option>
                   </select>
@@ -216,22 +212,34 @@
     document.getElementById('formContainer').classList.remove('hidden');
   }
 
-  function toggleMeal(index) {
+  function toggleMeal(index, isGuest) {
     const attending = document.getElementById(`attend-${index}`).value;
-    document.getElementById(`meal-container-${index}`).style.display =
-            attending === 'Yes' ? 'block' : 'none';
+    document.getElementById(`meal-container-${index}`).style.display = attending === 'Yes' ? 'block' : 'none';
+
+    // Show guest prompt only if main person is attending
+    const guestPrompt = document.getElementById(`guestPrompt-${index + 1}`);
+    if (guestPrompt) guestPrompt.classList.toggle('hidden', attending !== 'Yes');
   }
 
-  function toggleGuest(index) {
+  function toggleGuestFields(index) {
     const bringing = document.getElementById(`bringGuest-${index}`).value;
-    document.getElementById(`guestFields-${index}`).style.display =
-            bringing === 'Yes' ? 'block' : 'none';
+    const guestFields = document.getElementById(`guestFields-${index}`);
+    if (bringing === 'Yes') {
+      guestFields.classList.remove('hidden');
+      document.getElementById(`guestFirst-${index}`).required = true;
+      document.getElementById(`guestLast-${index}`).required = true;
+      document.getElementById(`meal-${index}`).required = true;
+    } else {
+      guestFields.classList.add('hidden');
+      document.getElementById(`guestFirst-${index}`).required = false;
+      document.getElementById(`guestLast-${index}`).required = false;
+      document.getElementById(`meal-${index}`).required = false;
+    }
   }
 
   function toggleGeneralMeal() {
     const attending = document.getElementById('genAttend').value;
-    document.getElementById('generalMealContainer').style.display =
-            attending === 'Yes' ? 'block' : 'none';
+    document.getElementById('generalMealContainer').style.display = attending === 'Yes' ? 'block' : 'none';
   }
 
   function goBack() {
@@ -246,25 +254,17 @@
     showOverlay(true);
 
     const membersResponses = members.map((m, i) => {
-      if (/guest/i.test(m.firstName + " " + m.lastName)) {
-        const bringGuest = document.getElementById(`bringGuest-${i}`).value;
+      const isGuest = /guest/i.test(m.firstName + " " + m.lastName);
+      if (isGuest) {
+        const bringGuest = document.getElementById(`bringGuest-${i}`)?.value || 'No';
         if (bringGuest === 'No') {
-          return {
-            firstName: 'Guest',
-            lastName: '',
-            attending: 'No',
-            meal: '',
-            comments: ''
-          };
+          return { firstName: 'Guest', lastName: '', attending: 'No', meal: '', comments: '' };
         }
         return {
           firstName: document.getElementById(`guestFirst-${i}`).value.trim(),
           lastName: document.getElementById(`guestLast-${i}`).value.trim(),
-          attending: document.getElementById(`attend-${i}`).value,
-          meal:
-                  document.getElementById(`attend-${i}`).value === 'Yes'
-                          ? document.getElementById(`meal-${i}`).value
-                          : '',
+          attending: 'Yes',
+          meal: document.getElementById(`meal-${i}`).value,
           comments: document.getElementById(`comments-${i}`).value
         };
       } else {
@@ -272,10 +272,8 @@
           firstName: m.firstName,
           lastName: m.lastName,
           attending: document.getElementById(`attend-${i}`).value,
-          meal:
-                  document.getElementById(`attend-${i}`).value === 'Yes'
-                          ? document.getElementById(`meal-${i}`).value
-                          : '',
+          meal: document.getElementById(`attend-${i}`).value === 'Yes'
+                  ? document.getElementById(`meal-${i}`).value : '',
           comments: document.getElementById(`comments-${i}`).value
         };
       }
