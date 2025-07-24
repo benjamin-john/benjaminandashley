@@ -59,6 +59,8 @@
   <form id="rsvpForm">
     <input type="hidden" id="groupNumber" name="groupNumber" />
     <div id="membersContainer"></div>
+    <label for="emailCopy">If you want to receive an email copy of your RSVP submission, please provide your email:</label>
+    <input type="email" id="emailCopy" />
     <button type="submit">Submit RSVP</button>
     <button type="button" class="secondary" onclick="goBack()">Back</button>
   </form>
@@ -96,7 +98,7 @@
 
 <div id="thankYouMessage" class="hidden"></div>
 
-<p id="version">Version: v2.6.2</p>
+<p id="version">Version: v2.7.0</p>
 <p id="footer">
   If you run into any technical issue, please reach out to Ben John at
   contact@benjamin-john.com or call 612-839-6889.
@@ -142,6 +144,16 @@
               'If we fail to find your invitation, then please fill out the general RSVP form below. Thanks!';
       errorDiv.classList.remove('hidden');
       document.getElementById('fallbackForm').classList.remove('hidden');
+      return;
+    }
+
+    if (response.alreadySubmitted) {
+      document.getElementById('lookup').style.display = 'none';
+      document.getElementById('formContainer').classList.add('hidden');
+      document.getElementById('fallbackForm').classList.add('hidden');
+      errorDiv.innerText =
+              "You have already submitted your RSVP. If you need to make any changes, please reach out to Ben via the contact info below.";
+      errorDiv.classList.remove('hidden');
       return;
     }
 
@@ -310,8 +322,9 @@
       }
     });
 
+    const emailCopy = document.getElementById('emailCopy').value.trim();
     const script = document.createElement('script');
-    script.src = `${BASE_URL}?action=submit&groupNumber=${currentGroup}&members=${encodeURIComponent(
+    script.src = `${BASE_URL}?action=submit&groupNumber=${currentGroup}&emailCopy=${encodeURIComponent(emailCopy)}&members=${encodeURIComponent(
             JSON.stringify(membersResponses)
     )}&callback=handleSubmit`;
     document.body.appendChild(script);
@@ -336,8 +349,9 @@
       }
     ];
 
+    const emailCopy = document.getElementById('genEmail').value.trim();
     const script = document.createElement('script');
-    script.src = `${BASE_URL}?action=submit&groupNumber=GENERAL&members=${encodeURIComponent(
+    script.src = `${BASE_URL}?action=submit&groupNumber=GENERAL&emailCopy=${encodeURIComponent(emailCopy)}&members=${encodeURIComponent(
             JSON.stringify(generalResponse)
     )}&callback=handleSubmit`;
     document.body.appendChild(script);
