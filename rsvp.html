@@ -1,54 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RSVP</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     #version { font-size: 0.9em; color: gray; margin-top: 10px; }
     #responseMessage { margin-top: 10px; font-weight: bold; }
+    .member { margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
   </style>
 </head>
 <body>
-<h1>RSVP Form</h1>
-<form id="rsvpForm">
-  <label for="name">Name:</label>
-  <input type="text" id="name" name="name" required><br><br>
-  <label for="email">Email:</label>
-  <input type="email" id="email" name="email" required><br><br>
-  <label for="rsvp">Will you attend?</label>
-  <select id="rsvp" name="rsvp" required>
-    <option value="Yes">Yes</option>
-    <option value="No">No</option>
-  </select><br><br>
-  <button type="submit">Submit</button>
-</form>
+<h1>RSVP Lookup</h1>
+<div id="lookup">
+  <label for="lookupName">Enter your first or last name:</label>
+  <input type="text" id="lookupName" />
+  <button onclick="lookupGroup()">Find My Group</button>
+</div>
+
+<div id="formContainer" style="display:none;">
+  <h2>RSVP Form</h2>
+  <form id="rsvpForm">
+    <div id="membersContainer"></div>
+    <button type="submit">Submit RSVP</button>
+  </form>
+</div>
 
 <p id="responseMessage"></p>
-<p id="version">Version: v1.0.3</p>
+<p id="version">Version: v2.0.0</p>
 
 <script>
-  document.getElementById('rsvpForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    document.getElementById('responseMessage').innerText = 'Submitting...';
+  const BASE_URL = 'https://script.google.com/macros/s/AKfycbxnlWjEmD6yrOfeQNR2osTzBtPQWtoC3veNXsVB2x5bovsXp_a63AvudkyB1jMC8Sfs/exec';
 
-    const baseUrl = 'https://script.google.com/macros/s/AKfycbxnlWjEmD6yrOfeQNR2osTzBtPQWtoC3veNXsVB2x5bovsXp_a63AvudkyB1jMC8Sfs/exec';
-    const params = new URLSearchParams({
-      name: document.getElementById('name').value,
-      email: document.getElementById('email').value,
-      rsvp: document.getElementById('rsvp').value,
-      callback: 'handleResponse'
+  let currentGroup = null;
+  let members = [];
+
+  function lookupGroup() {
+    const name = document.getElementById('lookupName').value;
+    const script = document.createElement('script');
+    script.src = `${BASE_URL}?action=search&name=${encodeURIComponent(name)}&callback=handleLookup`;
+    document.body.appendChild(script);
+  }
+
+  function handleLookup(response) {
+    if (!response.found) {
+      document.getElementById('responseMessage').innerText = 'No matching group found.';
+      return;
+    }
+
+    currentGroup = response.groupNumber;
+    members = response.members;
+
+    const container = document.getElementById('membersContainer');
+    container.innerHTML = '';
+    members.forEach((m, i) => {
+      container.innerHTML += `
+          <div class="member">
+            <h3>${m.firstName} ${m.lastName}</h3>
+            <label>Attending?
+              <select id="attend-${i}">
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </label><br/>
+            <label>Meal Choice:
+              <select id="meal-${i}">
+                <option value="Beef">Beef</option>
+                <option value="Chicken">Chicken</option>
+              </select>
+            </label><br/>
+            <label>Comments:
+              <input type="text" id="comments-${i}" />
+            </label>
+          </div>`;
     });
 
+    document.getElementById('lookup').style.display = 'none';
+    document.getElementById('formContainer').style.display = 'block';
+    document.getElementById('responseMessage').innerText = '';
+  }
+
+  document.getElementById('rsvpForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const membersResponses = members.map((m, i) => ({
+      firstName: m.firstName,
+      lastName: m.lastName,
+      attending: document.getElementById(`attend-${i}`).value,
+      meal: document.getElementById(`meal-${i}`).value,
+      comments: document.getElementById(`comments-${i}`).value
+    }));
+
     const script = document.createElement('script');
-    script.src = baseUrl + '?' + params.toString();
+    script.src = `${BASE_URL}?action=submit&groupNumber=${currentGroup}&members=${encodeURIComponent(JSON.stringify(membersResponses))}&callback=handleSubmit`;
     document.body.appendChild(script);
   });
 
-  function handleResponse(response) {
-    document.getElementById('responseMessage').innerText = response.message;
-    document.getElementById('rsvpForm').reset();
+  function handleSubmit(response) {
+    document.getElementById('responseMessage').innerText = response.message || 'RSVP submitted!';
+    document.getElementById('formContainer').style.display = 'none';
   }
 </script>
 </body>
