@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RSVP</title>
+  <title>RSVP Form</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f9f9f9; padding: 20px; max-width: 600px; margin: auto; }
     h1, h2 { text-align: center; }
     label { display: block; margin-top: 8px; font-weight: bold; }
     input, select, button { margin-top: 4px; padding: 8px; width: 100%; box-sizing: border-box; font-size: 1em; }
     button { background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 12px; }
+    button.secondary { background: #666; }
     button:disabled { background: #ccc; cursor: not-allowed; }
     .hidden { display: none; }
     .member { margin: 15px 0; padding: 12px; background: #fff; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -58,6 +59,7 @@
     <input type="hidden" id="groupNumber" name="groupNumber" />
     <div id="membersContainer"></div>
     <button type="submit">Submit RSVP</button>
+    <button type="button" class="secondary" onclick="goBack()">Back</button>
   </form>
 </div>
 
@@ -83,11 +85,14 @@
         <option value="Chicken">Chicken</option>
       </select>
     </div>
+    <label for="genComments">Comments:</label>
+    <input type="text" id="genComments" />
     <button type="submit">Submit RSVP</button>
+    <button type="button" class="secondary" onclick="goBack()">Back</button>
   </form>
 </div>
 
-<p id="version">Version: v2.3.1</p>
+<p id="version">Version: v2.4.0</p>
 
 <script>
   const BASE_URL = 'https://script.google.com/macros/s/AKfycbxnlWjEmD6yrOfeQNR2osTzBtPQWtoC3veNXsVB2x5bovsXp_a63AvudkyB1jMC8Sfs/exec';
@@ -116,6 +121,7 @@
 
     const script = document.createElement('script');
     script.src = `${BASE_URL}?action=search&name=${encodeURIComponent(first + ' ' + last)}&callback=handleLookup`;
+    script.onerror = () => { showOverlay(false); errorDiv.innerText = "An error occurred. Please try again."; errorDiv.classList.remove('hidden'); };
     document.body.appendChild(script);
   }
 
@@ -123,7 +129,7 @@
     showOverlay(false);
     const errorDiv = document.getElementById('errorAboveFallback');
 
-    if (!response.found) {
+    if (!response || !response.found) {
       errorDiv.innerText =
               'We could not find your invitation. Please check the spelling of your name and try again. ' +
               'If we fail to find your invitation, then please fill out the general RSVP form below. Thanks!';
@@ -139,9 +145,14 @@
     const container = document.getElementById('membersContainer');
     container.innerHTML = '';
     members.forEach((m, i) => {
+      const isGuest = /guest/i.test(m.firstName + " " + m.lastName);
       container.innerHTML += `
           <div class="member">
-            <h3>${m.firstName} ${m.lastName}</h3>
+            <h3>${isGuest ? 'Guest' : m.firstName + ' ' + m.lastName}</h3>
+            ${isGuest ? `
+              <label>Guest First Name:<input type="text" id="guestFirst-${i}" /></label>
+              <label>Guest Last Name:<input type="text" id="guestLast-${i}" /></label>
+            ` : ''}
             <label>Attending?
               <select id="attend-${i}" onchange="toggleMeal(${i})">
                 <option value="">-- Select --</option>
@@ -181,20 +192,30 @@
             attending === 'Yes' ? 'block' : 'none';
   }
 
+  function goBack() {
+    document.getElementById('formContainer').classList.add('hidden');
+    document.getElementById('fallbackForm').classList.add('hidden');
+    document.getElementById('lookup').style.display = 'block';
+    document.getElementById('errorAboveFallback').classList.add('hidden');
+  }
+
   document.getElementById('rsvpForm').addEventListener('submit', function (e) {
     e.preventDefault();
     showOverlay(true);
 
-    const membersResponses = members.map((m, i) => ({
-      firstName: m.firstName,
-      lastName: m.lastName,
-      attending: document.getElementById(`attend-${i}`).value,
-      meal:
-              document.getElementById(`attend-${i}`).value === 'Yes'
-                      ? document.getElementById(`meal-${i}`).value
-                      : '',
-      comments: document.getElementById(`comments-${i}`).value
-    }));
+    const membersResponses = members.map((m, i) => {
+      const isGuest = /guest/i.test(m.firstName + " " + m.lastName);
+      return {
+        firstName: isGuest ? document.getElementById(`guestFirst-${i}`).value.trim() : m.firstName,
+        lastName: isGuest ? document.getElementById(`guestLast-${i}`).value.trim() : m.lastName,
+        attending: document.getElementById(`attend-${i}`).value,
+        meal:
+                document.getElementById(`attend-${i}`).value === 'Yes'
+                        ? document.getElementById(`meal-${i}`).value
+                        : '',
+        comments: document.getElementById(`comments-${i}`).value
+      };
+    });
 
     const script = document.createElement('script');
     script.src = `${BASE_URL}?action=submit&groupNumber=${currentGroup}&members=${encodeURIComponent(
@@ -218,7 +239,7 @@
                 document.getElementById('genAttend').value === 'Yes'
                         ? document.getElementById('genMeal').value
                         : '',
-        comments: ''
+        comments: document.getElementById('genComments').value
       }
     ];
 
