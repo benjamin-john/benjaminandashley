@@ -14,7 +14,6 @@
     .hidden { display: none; }
     .member { margin: 15px 0; padding: 12px; background: #fff; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     #version { font-size: 0.9em; text-align: center; margin-top: 20px; color: gray; }
-    #responseMessage { margin-top: 15px; font-weight: bold; text-align: center; color: #c00; }
     #errorAboveFallback { margin-top: 20px; font-weight: bold; text-align: center; color: #c00; }
     /* Overlay */
     #overlay {
@@ -62,10 +61,7 @@
   </form>
 </div>
 
-<div id="errorAboveFallback" class="hidden">
-  We could not find your invitation. Please check the spelling of your name and try again.
-  If we fail to find your invitation, then please fill out the general RSVP form below. Thanks!
-</div>
+<div id="errorAboveFallback" class="hidden"></div>
 
 <div id="fallbackForm" class="hidden">
   <h2>General RSVP Form</h2>
@@ -91,7 +87,7 @@
   </form>
 </div>
 
-<p id="version">Version: v2.3.0</p>
+<p id="version">Version: v2.3.1</p>
 
 <script>
   const BASE_URL = 'https://script.google.com/macros/s/AKfycbxnlWjEmD6yrOfeQNR2osTzBtPQWtoC3veNXsVB2x5bovsXp_a63AvudkyB1jMC8Sfs/exec';
@@ -106,12 +102,16 @@
   function lookupGroup() {
     const first = document.getElementById('firstName').value.trim();
     const last = document.getElementById('lastName').value.trim();
+    const errorDiv = document.getElementById('errorAboveFallback');
+
     if (!first || !last) {
-      document.getElementById('responseMessage').innerText = 'Please enter both first and last name.';
+      errorDiv.innerText = 'Please enter both first and last name.';
+      errorDiv.classList.remove('hidden');
       return;
     }
 
-    document.getElementById('responseMessage').innerText = '';
+    errorDiv.innerText = '';
+    errorDiv.classList.add('hidden');
     showOverlay(true);
 
     const script = document.createElement('script');
@@ -121,9 +121,13 @@
 
   function handleLookup(response) {
     showOverlay(false);
+    const errorDiv = document.getElementById('errorAboveFallback');
 
     if (!response.found) {
-      document.getElementById('errorAboveFallback').classList.remove('hidden');
+      errorDiv.innerText =
+              'We could not find your invitation. Please check the spelling of your name and try again. ' +
+              'If we fail to find your invitation, then please fill out the general RSVP form below. Thanks!';
+      errorDiv.classList.remove('hidden');
       document.getElementById('fallbackForm').classList.remove('hidden');
       return;
     }
@@ -161,21 +165,23 @@
 
     document.getElementById('lookup').style.display = 'none';
     document.getElementById('fallbackForm').classList.add('hidden');
-    document.getElementById('errorAboveFallback').classList.add('hidden');
+    errorDiv.classList.add('hidden');
     document.getElementById('formContainer').classList.remove('hidden');
   }
 
   function toggleMeal(index) {
     const attending = document.getElementById(`attend-${index}`).value;
-    document.getElementById(`meal-container-${index}`).style.display = attending === 'Yes' ? 'block' : 'none';
+    document.getElementById(`meal-container-${index}`).style.display =
+            attending === 'Yes' ? 'block' : 'none';
   }
 
   function toggleGeneralMeal() {
     const attending = document.getElementById('genAttend').value;
-    document.getElementById('generalMealContainer').style.display = attending === 'Yes' ? 'block' : 'none';
+    document.getElementById('generalMealContainer').style.display =
+            attending === 'Yes' ? 'block' : 'none';
   }
 
-  document.getElementById('rsvpForm').addEventListener('submit', function(e) {
+  document.getElementById('rsvpForm').addEventListener('submit', function (e) {
     e.preventDefault();
     showOverlay(true);
 
@@ -183,40 +189,54 @@
       firstName: m.firstName,
       lastName: m.lastName,
       attending: document.getElementById(`attend-${i}`).value,
-      meal: document.getElementById(`attend-${i}`).value === 'Yes' ? document.getElementById(`meal-${i}`).value : '',
+      meal:
+              document.getElementById(`attend-${i}`).value === 'Yes'
+                      ? document.getElementById(`meal-${i}`).value
+                      : '',
       comments: document.getElementById(`comments-${i}`).value
     }));
 
     const script = document.createElement('script');
-    script.src = `${BASE_URL}?action=submit&groupNumber=${currentGroup}&members=${encodeURIComponent(JSON.stringify(membersResponses))}&callback=handleSubmit`;
+    script.src = `${BASE_URL}?action=submit&groupNumber=${currentGroup}&members=${encodeURIComponent(
+            JSON.stringify(membersResponses)
+    )}&callback=handleSubmit`;
     document.body.appendChild(script);
   });
 
-  document.getElementById('generalRSVPForm').addEventListener('submit', function(e) {
+  document.getElementById('generalRSVPForm').addEventListener('submit', function (e) {
     e.preventDefault();
     showOverlay(true);
 
-    const generalResponse = [{
-      firstName: document.getElementById('firstName').value.trim(),
-      lastName: document.getElementById('lastName').value.trim(),
-      email: document.getElementById('genEmail').value.trim(),
-      phone: document.getElementById('genPhone').value.trim(),
-      attending: document.getElementById('genAttend').value,
-      meal: document.getElementById('genAttend').value === 'Yes' ? document.getElementById('genMeal').value : '',
-      comments: ''
-    }];
+    const generalResponse = [
+      {
+        firstName: document.getElementById('firstName').value.trim(),
+        lastName: document.getElementById('lastName').value.trim(),
+        email: document.getElementById('genEmail').value.trim(),
+        phone: document.getElementById('genPhone').value.trim(),
+        attending: document.getElementById('genAttend').value,
+        meal:
+                document.getElementById('genAttend').value === 'Yes'
+                        ? document.getElementById('genMeal').value
+                        : '',
+        comments: ''
+      }
+    ];
 
     const script = document.createElement('script');
-    script.src = `${BASE_URL}?action=submit&groupNumber=GENERAL&members=${encodeURIComponent(JSON.stringify(generalResponse))}&callback=handleSubmit`;
+    script.src = `${BASE_URL}?action=submit&groupNumber=GENERAL&members=${encodeURIComponent(
+            JSON.stringify(generalResponse)
+    )}&callback=handleSubmit`;
     document.body.appendChild(script);
   });
 
   function handleSubmit(response) {
     showOverlay(false);
-    document.getElementById('responseMessage').innerText = response.message || 'RSVP submitted!';
+    const errorDiv = document.getElementById('errorAboveFallback');
+    errorDiv.innerText = response.message || 'RSVP submitted!';
+    errorDiv.style.color = 'green';
+    errorDiv.classList.remove('hidden');
     document.getElementById('formContainer').classList.add('hidden');
     document.getElementById('fallbackForm').classList.add('hidden');
-    document.getElementById('errorAboveFallback').classList.add('hidden');
   }
 </script>
 </body>
