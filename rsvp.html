@@ -1,121 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RSVP</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #FDFBF7;
-      color: #333;
-      max-width: 600px;
-      margin: 40px auto;
       padding: 20px;
-      text-align: center;
     }
-    input, select, button {
-      width: 100%;
-      margin: 10px 0;
-      padding: 10px;
-      font-size: 16px;
+    #version {
+      font-size: 0.9em;
+      color: gray;
+      margin-top: 10px;
     }
-    .hidden {
-      display: none;
-    }
-    h3 {
-      margin-top: 20px;
-    }
-    .success-message {
-      color: #3B4D3B;
-      font-size: 1.2em;
+    #responseMessage {
+      margin-top: 10px;
       font-weight: bold;
     }
   </style>
 </head>
 <body>
-<h1>RSVP</h1>
+<h1>RSVP Form</h1>
+<form id="rsvpForm">
+  <label for="name">Name:</label>
+  <input type="text" id="name" name="name" required /><br /><br />
 
-<!-- Code Lookup Section -->
-<div id="code-section">
-  <p>Enter your RSVP code:</p>
-  <input type="text" id="rsvpCode" placeholder="e.g., SMITH2025">
-  <button onclick="verifyCode()">Continue</button>
-  <p id="error" style="color: red; display: none;">Invalid code. Please try again.</p>
-</div>
+  <label for="email">Email:</label>
+  <input type="email" id="email" name="email" required /><br /><br />
 
-<!-- RSVP Form -->
-<form
-        id="rsvpForm"
-        class="hidden"
-        action="https://script.google.com/macros/s/AKfycbxnlWjEmD6yrOfeQNR2osTzBtPQWtoC3veNXsVB2x5bovsXp_a63AvudkyB1jMC8Sfs/exec"
-        method="POST"
-        target="hiddenFrame"
-        onsubmit="onFormSubmit()">
+  <label for="rsvp">Will you attend?</label>
+  <select id="rsvp" name="rsvp" required>
+    <option value="Yes">Yes</option>
+    <option value="No">No</option>
+  </select><br /><br />
 
-  <h2 id="welcome"></h2>
-  <div id="guest-fields"></div>
-  <button type="submit">Submit RSVP</button>
+  <button type="submit">Submit</button>
 </form>
 
-<!-- Success Message -->
-<div id="success" class="hidden">
-  <p class="success-message">Thank you! Your RSVP has been recorded.</p>
-</div>
-
-<!-- Hidden iframe to avoid page refresh -->
-<iframe name="hiddenFrame" style="display:none;"></iframe>
+<p id="responseMessage"></p>
+<p id="version">Version: v1.0.0</p>
 
 <script>
-  // Guest list with codes and allowed guests
-  const guestList = [
-    { code: "SMITH2025", name: "John & Mary Smith", guestsAllowed: 2 },
-    { code: "BEN2025", name: "Ben Johnson", guestsAllowed: 1 },
-    { code: "ANDERSON2025", name: "The Anderson Family", guestsAllowed: 5 }
-  ];
+  document.getElementById('rsvpForm').addEventListener('submit', function(e) {
+    e.preventDefault();
 
-  let currentGuest = null;
+    const formData = {
+      name: document.getElementById('name').value,
+      email: document.getElementById('email').value,
+      rsvp: document.getElementById('rsvp').value
+    };
 
-  // Verify RSVP Code
-  function verifyCode() {
-    const input = document.getElementById("rsvpCode").value.trim().toUpperCase();
-    const match = guestList.find(g => g.code === input);
+    document.getElementById('responseMessage').innerText = 'Submitting...';
 
-    if (!match) {
-      document.getElementById("error").style.display = "block";
-      return;
-    }
-
-    currentGuest = match;
-    document.getElementById("error").style.display = "none";
-    document.getElementById("code-section").classList.add("hidden");
-
-    // Show form with dynamic guest fields
-    document.getElementById("welcome").innerText = `Welcome, ${match.name}!`;
-    const container = document.getElementById("guest-fields");
-    container.innerHTML = `<input type="hidden" name="code" value="${match.code}">`;
-
-    for (let i = 1; i <= match.guestsAllowed; i++) {
-      container.innerHTML += `
-          <h3>Guest ${i}</h3>
-          <input type="text" name="guest${i}-name" placeholder="Name" required>
-          <select name="guest${i}-meal" required>
-            <option value="" disabled selected>Meal Choice</option>
-            <option value="Chicken">Chicken</option>
-            <option value="Beef">Beef</option>
-            <option value="Vegetarian">Vegetarian</option>
-          </select>
-        `;
-    }
-
-    document.getElementById("rsvpForm").classList.remove("hidden");
-  }
-
-  // Handle form submission
-  function onFormSubmit() {
-    document.getElementById("rsvpForm").classList.add("hidden");
-    document.getElementById("success").classList.remove("hidden");
-  }
+    fetch('YOUR_WEB_APP_URL', {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    })
+            .then(response => response.json())
+            .then(data => {
+              document.getElementById('responseMessage').innerText = data.message;
+              document.getElementById('rsvpForm').reset();
+            })
+            .catch(error => {
+              console.error(error);
+              document.getElementById('responseMessage').innerText =
+                      'There was an error submitting your RSVP.';
+            });
+  });
 </script>
 </body>
 </html>
