@@ -8,9 +8,11 @@
     body {
       font-family: Arial, sans-serif;
       background: #FDFBF7;
+      color: #333;
       max-width: 600px;
-      margin: auto;
+      margin: 40px auto;
       padding: 20px;
+      text-align: center;
     }
     input, select, button {
       width: 100%;
@@ -21,39 +23,60 @@
     .hidden {
       display: none;
     }
+    h3 {
+      margin-top: 20px;
+    }
+    .success-message {
+      color: #3B4D3B;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
 <h1>RSVP</h1>
+
+<!-- Code Lookup Section -->
 <div id="code-section">
   <p>Enter your RSVP code:</p>
   <input type="text" id="rsvpCode" placeholder="e.g., SMITH2025">
   <button onclick="verifyCode()">Continue</button>
-  <p id="error" style="color:red; display:none;">Invalid code, please try again.</p>
+  <p id="error" style="color: red; display: none;">Invalid code. Please try again.</p>
 </div>
 
-<form id="rsvpForm" class="hidden" onsubmit="submitRSVP(event)">
+<!-- RSVP Form -->
+<form
+        id="rsvpForm"
+        class="hidden"
+        action="https://script.google.com/macros/s/AKfycbxnlWjEmD6yrOfeQNR2osTzBtPQWtoC3veNXsVB2x5bovsXp_a63AvudkyB1jMC8Sfs/exec"
+        method="POST"
+        target="hiddenFrame"
+        onsubmit="onFormSubmit()">
+
   <h2 id="welcome"></h2>
   <div id="guest-fields"></div>
   <button type="submit">Submit RSVP</button>
 </form>
 
+<!-- Success Message -->
 <div id="success" class="hidden">
-  <h2>Thank you! Your RSVP has been recorded.</h2>
+  <p class="success-message">Thank you! Your RSVP has been recorded.</p>
 </div>
 
-<script>
-  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxnlWjEmD6yrOfeQNR2osTzBtPQWtoC3veNXsVB2x5bovsXp_a63AvudkyB1jMC8Sfs/exec";
+<!-- Hidden iframe to avoid page refresh -->
+<iframe name="hiddenFrame" style="display:none;"></iframe>
 
-  // Guest list
+<script>
+  // Guest list with codes and allowed guests
   const guestList = [
     { code: "SMITH2025", name: "John & Mary Smith", guestsAllowed: 2 },
     { code: "BEN2025", name: "Ben Johnson", guestsAllowed: 1 },
-    { code: "ANDERSON2025", name: "Anderson Family", guestsAllowed: 5 }
+    { code: "ANDERSON2025", name: "The Anderson Family", guestsAllowed: 5 }
   ];
 
   let currentGuest = null;
 
+  // Verify RSVP Code
   function verifyCode() {
     const input = document.getElementById("rsvpCode").value.trim().toUpperCase();
     const match = guestList.find(g => g.code === input);
@@ -67,17 +90,16 @@
     document.getElementById("error").style.display = "none";
     document.getElementById("code-section").classList.add("hidden");
 
-    // Show form
+    // Show form with dynamic guest fields
     document.getElementById("welcome").innerText = `Welcome, ${match.name}!`;
     const container = document.getElementById("guest-fields");
-    container.innerHTML = "";
+    container.innerHTML = `<input type="hidden" name="code" value="${match.code}">`;
 
-    // Create dynamic fields
     for (let i = 1; i <= match.guestsAllowed; i++) {
       container.innerHTML += `
           <h3>Guest ${i}</h3>
           <input type="text" name="guest${i}-name" placeholder="Name" required>
-          <select name="guest${i}-meal">
+          <select name="guest${i}-meal" required>
             <option value="" disabled selected>Meal Choice</option>
             <option value="Chicken">Chicken</option>
             <option value="Beef">Beef</option>
@@ -89,39 +111,10 @@
     document.getElementById("rsvpForm").classList.remove("hidden");
   }
 
-  async function submitRSVP(e) {
-    e.preventDefault();
-    const form = document.getElementById("rsvpForm");
-    const formData = new FormData(form);
-    const guests = [];
-
-    for (let i = 1; i <= currentGuest.guestsAllowed; i++) {
-      guests.push({
-        name: formData.get(`guest${i}-name`),
-        meal: formData.get(`guest${i}-meal`)
-      });
-    }
-
-    const payload = {
-      code: currentGuest.code,
-      guests
-    };
-
-    const response = await fetch(WEB_APP_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      mode: "cors" // Add this
-    });
-
-
-    if (response.ok) {
-      form.classList.add("hidden");
-      document.getElementById("success").classList.remove("hidden");
-      localStorage.setItem(`rsvp_${currentGuest.code}`, "submitted");
-    } else {
-      alert("Error submitting RSVP. Please try again.");
-    }
+  // Handle form submission
+  function onFormSubmit() {
+    document.getElementById("rsvpForm").classList.add("hidden");
+    document.getElementById("success").classList.remove("hidden");
   }
 </script>
 </body>
