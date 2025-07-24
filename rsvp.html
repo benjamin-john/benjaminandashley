@@ -14,7 +14,8 @@
     .hidden { display: none; }
     .member { margin: 15px 0; padding: 12px; background: #fff; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     #version { font-size: 0.9em; text-align: center; margin-top: 20px; color: gray; }
-    #responseMessage { margin-top: 15px; font-weight: bold; text-align: center; }
+    #responseMessage { margin-top: 15px; font-weight: bold; text-align: center; color: #c00; }
+    #errorAboveFallback { margin-top: 20px; font-weight: bold; text-align: center; color: #c00; }
     /* Overlay */
     #overlay {
       position: fixed;
@@ -49,7 +50,7 @@
   <input type="text" id="firstName" required />
   <label for="lastName">Last Name:</label>
   <input type="text" id="lastName" required />
-  <button onclick="lookupGroup()">Find My Group</button>
+  <button onclick="lookupGroup()">Find My Invitation</button>
 </div>
 
 <div id="formContainer" class="hidden">
@@ -61,13 +62,14 @@
   </form>
 </div>
 
+<div id="errorAboveFallback" class="hidden">
+  We could not find your invitation. Please check the spelling of your name and try again.
+  If we fail to find your invitation, then please fill out the general RSVP form below. Thanks!
+</div>
+
 <div id="fallbackForm" class="hidden">
   <h2>General RSVP Form</h2>
   <form id="generalRSVPForm">
-    <label for="genFirstName">First Name:</label>
-    <input type="text" id="genFirstName" required />
-    <label for="genLastName">Last Name:</label>
-    <input type="text" id="genLastName" required />
     <label for="genEmail">Email:</label>
     <input type="email" id="genEmail" required />
     <label for="genPhone">Phone:</label>
@@ -89,8 +91,7 @@
   </form>
 </div>
 
-<p id="responseMessage"></p>
-<p id="version">Version: v2.2.0</p>
+<p id="version">Version: v2.3.0</p>
 
 <script>
   const BASE_URL = 'https://script.google.com/macros/s/AKfycbxnlWjEmD6yrOfeQNR2osTzBtPQWtoC3veNXsVB2x5bovsXp_a63AvudkyB1jMC8Sfs/exec';
@@ -122,15 +123,15 @@
     showOverlay(false);
 
     if (!response.found) {
-      document.getElementById('responseMessage').innerText = 'No matching group found. Please check the spelling of your name or fill out the general RSVP form below.';
+      document.getElementById('errorAboveFallback').classList.remove('hidden');
       document.getElementById('fallbackForm').classList.remove('hidden');
       return;
     }
 
     currentGroup = response.groupNumber;
     members = response.members;
-
     document.getElementById('groupNumber').value = currentGroup;
+
     const container = document.getElementById('membersContainer');
     container.innerHTML = '';
     members.forEach((m, i) => {
@@ -160,8 +161,8 @@
 
     document.getElementById('lookup').style.display = 'none';
     document.getElementById('fallbackForm').classList.add('hidden');
+    document.getElementById('errorAboveFallback').classList.add('hidden');
     document.getElementById('formContainer').classList.remove('hidden');
-    document.getElementById('responseMessage').innerText = '';
   }
 
   function toggleMeal(index) {
@@ -196,8 +197,8 @@
     showOverlay(true);
 
     const generalResponse = [{
-      firstName: document.getElementById('genFirstName').value.trim(),
-      lastName: document.getElementById('genLastName').value.trim(),
+      firstName: document.getElementById('firstName').value.trim(),
+      lastName: document.getElementById('lastName').value.trim(),
       email: document.getElementById('genEmail').value.trim(),
       phone: document.getElementById('genPhone').value.trim(),
       attending: document.getElementById('genAttend').value,
@@ -215,6 +216,7 @@
     document.getElementById('responseMessage').innerText = response.message || 'RSVP submitted!';
     document.getElementById('formContainer').classList.add('hidden');
     document.getElementById('fallbackForm').classList.add('hidden');
+    document.getElementById('errorAboveFallback').classList.add('hidden');
   }
 </script>
 </body>
