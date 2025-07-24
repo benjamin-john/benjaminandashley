@@ -94,8 +94,10 @@
       <label for="genMeal">Meal Choice:</label>
       <select id="genMeal">
         <option value="">-- Select --</option>
-        <option value="Beef">Beef</option>
-        <option value="Chicken">Chicken</option>
+        <option value="Roast Pork Loin with Flame Roasted Apples (Gluten Free)">Roast Pork Loin with Flame Roasted Apples (Gluten Free)</option>
+        <option value="Roast Turkey">Roast Turkey</option>
+        <option value="Vegetarian Meal Option">Vegetarian Meal Option</option>
+        <option value="Kids Meal: Chicken Nuggets and Mac & Cheese">Kids Meal: Chicken Nuggets and Mac & Cheese</option>
       </select>
     </div>
     <label for="genComments">Comments:</label>
@@ -174,6 +176,13 @@
     container.innerHTML = '';
     members.forEach((m, i) => {
       const isGuest = /guest/i.test(m.firstName + " " + m.lastName);
+      const mealOptions = `
+          <option value="">-- Select --</option>
+          <option value="Roast Pork Loin with Flame Roasted Apples (Gluten Free)">Roast Pork Loin with Flame Roasted Apples (Gluten Free)</option>
+          <option value="Roast Turkey">Roast Turkey</option>
+          <option value="Vegetarian Meal Option">Vegetarian Meal Option</option>
+          <option value="Kids Meal: Chicken Nuggets and Mac & Cheese">Kids Meal: Chicken Nuggets and Mac & Cheese</option>
+        `;
       if (isGuest) {
         container.innerHTML += `
             <div class="member">
@@ -191,11 +200,7 @@
                 <label>Guest First Name: <input type="text" id="guestFirst-${i}" /></label>
                 <label>Guest Last Name: <input type="text" id="guestLast-${i}" /></label>
                 <label>Meal Choice:
-                  <select id="meal-${i}">
-                    <option value="">-- Select --</option>
-                    <option value="Beef">Beef</option>
-                    <option value="Chicken">Chicken</option>
-                  </select>
+                  <select id="meal-${i}">${mealOptions}</select>
                 </label>
                 <label>Comments:
                   <input type="text" id="comments-${i}" />
@@ -215,11 +220,7 @@
               </label>
               <div id="meal-container-${i}" class="hidden">
                 <label>Meal Choice:
-                  <select id="meal-${i}">
-                    <option value="">-- Select --</option>
-                    <option value="Beef">Beef</option>
-                    <option value="Chicken">Chicken</option>
-                  </select>
+                  <select id="meal-${i}">${mealOptions}</select>
                 </label>
               </div>
               <label>Comments:
