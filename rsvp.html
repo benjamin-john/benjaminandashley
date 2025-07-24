@@ -26,14 +26,13 @@
 </form>
 
 <p id="responseMessage"></p>
-<p id="version">Version: v1.0.2</p>
+<p id="version">Version: v1.0.3</p>
 
 <script>
   document.getElementById('rsvpForm').addEventListener('submit', function(e) {
     e.preventDefault();
     document.getElementById('responseMessage').innerText = 'Submitting...';
 
-    const script = document.createElement('script');
     const baseUrl = 'https://script.google.com/macros/s/AKfycbxnlWjEmD6yrOfeQNR2osTzBtPQWtoC3veNXsVB2x5bovsXp_a63AvudkyB1jMC8Sfs/exec';
     const params = new URLSearchParams({
       name: document.getElementById('name').value,
@@ -41,6 +40,8 @@
       rsvp: document.getElementById('rsvp').value,
       callback: 'handleResponse'
     });
+
+    const script = document.createElement('script');
     script.src = baseUrl + '?' + params.toString();
     document.body.appendChild(script);
   });
