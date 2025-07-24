@@ -15,8 +15,8 @@
     .hidden { display: none; }
     .member { margin: 15px 0; padding: 12px; background: #fff; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     #version { font-size: 0.9em; text-align: center; margin-top: 20px; color: gray; }
-    #footer { font-size: 0.9em; text-align: center; margin-top: 20px; color: #444; }
-    #errorAboveFallback { margin-top: 20px; font-weight: bold; text-align: center; color: #c00; }
+    #footer { font-size: 0.9em; text-align: center; margin-top: 20px; color: #444; white-space: pre-line; }
+    #thankYouMessage { text-align: center; font-size: 1.2em; font-weight: bold; margin-top: 20px; color: green; }
     /* Overlay */
     #overlay {
       position: fixed;
@@ -94,10 +94,12 @@
   </form>
 </div>
 
-<p id="version">Version: v2.6.0</p>
+<div id="thankYouMessage" class="hidden"></div>
+
+<p id="version">Version: v2.6.2</p>
 <p id="footer">
   If you run into any technical issue, please reach out to Ben John at
-  <a href="mailto:contact@benjamin-john.com">contact@benjamin-john.com</a> or call 612-839-6889.
+  contact@benjamin-john.com or call 612-839-6889.
 </p>
 
 <script>
@@ -157,7 +159,7 @@
               <h3>Guest</h3>
               <div id="guestPrompt-${i}" class="hidden">
                 <label>Will you be bringing a Guest?
-                  <select id="bringGuest-${i}" required onchange="toggleGuestFields(${i})">
+                  <select id="bringGuest-${i}" onchange="toggleGuestFields(${i})">
                     <option value="">-- Select --</option>
                     <option value="Yes">Yes</option>
                     <option value="No">No</option>
@@ -214,27 +216,55 @@
 
   function toggleMeal(index, isGuest) {
     const attending = document.getElementById(`attend-${index}`).value;
-    document.getElementById(`meal-container-${index}`).style.display = attending === 'Yes' ? 'block' : 'none';
+    const mealDropdown = document.getElementById(`meal-${index}`);
+    const mealContainer = document.getElementById(`meal-container-${index}`);
 
-    // Show guest prompt only if main person is attending
+    if (attending === 'Yes') {
+      mealContainer.style.display = 'block';
+      mealDropdown.required = true;
+    } else {
+      mealContainer.style.display = 'none';
+      mealDropdown.required = false;
+    }
+
     const guestPrompt = document.getElementById(`guestPrompt-${index + 1}`);
-    if (guestPrompt) guestPrompt.classList.toggle('hidden', attending !== 'Yes');
+    if (guestPrompt) {
+      guestPrompt.classList.toggle('hidden', attending !== 'Yes');
+      if (attending !== 'Yes') resetGuestFields(index + 1);
+    }
   }
 
   function toggleGuestFields(index) {
     const bringing = document.getElementById(`bringGuest-${index}`).value;
     const guestFields = document.getElementById(`guestFields-${index}`);
+    const guestFirst = document.getElementById(`guestFirst-${index}`);
+    const guestLast = document.getElementById(`guestLast-${index}`);
+    const guestMeal = document.getElementById(`meal-${index}`);
+
     if (bringing === 'Yes') {
       guestFields.classList.remove('hidden');
-      document.getElementById(`guestFirst-${index}`).required = true;
-      document.getElementById(`guestLast-${index}`).required = true;
-      document.getElementById(`meal-${index}`).required = true;
+      guestFirst.required = true;
+      guestLast.required = true;
+      guestMeal.required = true;
     } else {
       guestFields.classList.add('hidden');
-      document.getElementById(`guestFirst-${index}`).required = false;
-      document.getElementById(`guestLast-${index}`).required = false;
-      document.getElementById(`meal-${index}`).required = false;
+      guestFirst.required = false;
+      guestLast.required = false;
+      guestMeal.required = false;
     }
+  }
+
+  function resetGuestFields(index) {
+    const bringSelect = document.getElementById(`bringGuest-${index}`);
+    if (bringSelect) bringSelect.value = "";
+    const guestFields = document.getElementById(`guestFields-${index}`);
+    if (guestFields) guestFields.classList.add('hidden');
+    const guestFirst = document.getElementById(`guestFirst-${index}`);
+    const guestLast = document.getElementById(`guestLast-${index}`);
+    const guestMeal = document.getElementById(`meal-${index}`);
+    if (guestFirst) guestFirst.required = false;
+    if (guestLast) guestLast.required = false;
+    if (guestMeal) guestMeal.required = false;
   }
 
   function toggleGeneralMeal() {
@@ -245,6 +275,7 @@
   function goBack() {
     document.getElementById('formContainer').classList.add('hidden');
     document.getElementById('fallbackForm').classList.add('hidden');
+    document.getElementById('thankYouMessage').classList.add('hidden');
     document.getElementById('lookup').style.display = 'block';
     document.getElementById('errorAboveFallback').classList.add('hidden');
   }
@@ -314,12 +345,13 @@
 
   function handleSubmit(response) {
     showOverlay(false);
-    const errorDiv = document.getElementById('errorAboveFallback');
-    errorDiv.innerText = response.message || 'RSVP submitted!';
-    errorDiv.style.color = 'green';
-    errorDiv.classList.remove('hidden');
     document.getElementById('formContainer').classList.add('hidden');
     document.getElementById('fallbackForm').classList.add('hidden');
+    document.getElementById('errorAboveFallback').classList.add('hidden');
+
+    const thankYou = document.getElementById('thankYouMessage');
+    thankYou.innerText = response.message || 'Thank you! Your RSVP has been submitted.';
+    thankYou.classList.remove('hidden');
   }
 </script>
 </body>
