@@ -1533,6 +1533,11 @@ a {
   -khtml-user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
+.cid-uRMXHOt2nB .card-text,
+.cid-uRMXHOt2nB .mbr-section-btn,
+.cid-uRMXHOt2nB .social-row {
+  text-align: left;
+}
 .cid-uRNdkEItU1 {
   padding-top: 6rem;
   padding-bottom: 6rem;
