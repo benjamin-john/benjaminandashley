@@ -1670,7 +1670,7 @@ a {
 }
 .cid-uRNbdZ8ARR {
   padding-top: 5rem;
-  padding-bottom: 5rem;
+  padding-bottom: 1rem;
   background-color: #fdfbf7;
 }
 .cid-uRNbdZ8ARR .mbr-fallback-image.disabled {
@@ -1705,6 +1705,19 @@ a {
 }
 .cid-uRNbdZ8ARR H3 {
   color: #483c32;
+}
+.cid-uRNbdZ8ARR .list {
+  text-align: left;
+}
+.cid-uSipjcpTLR {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  background-color: #fdfbf7;
+}
+.cid-uSipjcpTLR blockquote {
+  border-color: #3b4d3b;
+  border-radius: 4px;
+  background-color: #f9f6f2;
 }
 .cid-uRNup3cNdf {
   padding-top: 6rem;
